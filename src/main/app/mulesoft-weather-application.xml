@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -8,10 +8,11 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
     <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
     <db:generic-config driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" doc:name="MySQL Configuration" url="jdbc:mysql://localhost:3306/weather?user=root&amp;password=root"/>
-    <http:request-config name="Query-openweathermap-configuration" host="api.openweathermap.org/data/2.5/" port="8080" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="Query-openweathermap-configuration" host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
     <flow name="selectCityFlow">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
         <db:select config-ref="MySQL_Configuration" doc:name="Database">
@@ -20,13 +21,13 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
         <json:object-to-json-transformer doc:name="Object to JSON"/>
         
         <dw:transform-message doc:name="Transform Message" metadata:id="4e7c7148-2d08-47cd-a313-bee3ae245bc1">
-            <dw:input-payload mimeType="application/xml"/>
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
 div: {
 		(payload map {
-		option @(value: $.name): $.name
+		option @(value: $.id): $.name
 	})
 }]]></dw:set-payload>
         </dw:transform-message>
@@ -34,13 +35,16 @@ div: {
         <parse-template location="./src/main/resources/index.html" doc:name="Parse Template"/>
     </flow>
     <flow name="searchWeatherFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/weather" doc:name="HTTP"/>
-        <http:request config-ref="Query-openweathermap-configuration" path="weather" method="GET" doc:name="HTTP">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/weather" doc:name="HTTP" allowedMethods="GET"/>
+        <http:request config-ref="Query-openweathermap-configuration" path="/data/2.5/weather" method="GET" doc:name="HTTP">
             <http:request-builder>
+                <http:query-param paramName="id" value="#[message.inboundProperties.'http.query.params'.id]"/>
                 <http:query-param paramName="appid" value="eba8d3b0edcaf9a93f9bd74589870d37"/>
-                <http:query-param paramName="lang" value="ES"/>
                 <http:query-param paramName="units" value="metric"/>
+                <http:query-param paramName="lang" value="ES"/>
             </http:request-builder>
         </http:request>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <parse-template location="./src/main/resources/weather.html" doc:name="Parse Template"/>
     </flow>
 </mule>

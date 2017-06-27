@@ -3,4 +3,5 @@
     <name>mulesoft-weather-application</name>
     <description></description>
     <muleExtension name="Mongo DB" qualifier="org.mule.tooling.ui.contribution.mongo.3.5.0"/>
+    <muleExtension name="Twitter" qualifier="org.mule.tooling.ui.contribution.twitter.3.6.0"/>
 </mule-project>

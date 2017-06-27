@@ -1,11 +1,11 @@
 <html>
 	<body>
 		<h1>Tiempo</h1>
-		<form action="/weather" method="POST">
+		<form action="/weather" method="GET">
 			Elegir ciudad: <select name="id" >
 				#[message.payload]
 			</select>
-			<input type="submit" name="search" value="Buscar" id="search-button"/>
+			<input type="submit" value="Buscar" id="search-button"/>
 		</form>
 	</body>
 </html>
