@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://example.com/example.json",
+    "properties": {
+        "country_code": {
+            "id": "/properties/country_code",
+            "type": "string"
+        },
+        "country_name": {
+            "id": "/properties/country_name",
+            "type": "string"
+        }
+    },
+    "type": "object"
+}

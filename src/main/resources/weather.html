@@ -1,7 +1,22 @@
 <html>
 	<body>
-		<h1>Tiempo actual</h1>
-		#[message.payload.weather]
-		
+		<h1>Mulesoft weather application</h1>
+		<h2>Tiempo actual</h2>
+		<img src="http://openweathermap.org/img/w/#[message.payload.weather[0].icon].png" />
+		<ul>
+			<li>Condiciones meteorologicas: #[message.payload.weather[0].description]</li>
+			<li>Temperatura: #[message.payload.main.temp] °</li>
+			<li>Presion: #[message.payload.main.pressure] hPa</li>
+			<li>Humedad: #[message.payload.main.humidity] %</li>
+			<li>Visibilidad: #[message.payload.visibility] metros</li>
+			<li>Viento: #[message.payload.wind.speed] km/h direccion #[message.payload.wind.deg]°</li>
+		</ul>	
+		<form action="/forecast" method="GET">
+			<input type="hidden" value="#[message.payload.id]" name="id"/>
+			<input type="submit" value="Ver pronostico para los proximos dias en #[message.payload.name]" id="forecast-button"/>
+		</form>	
+		<form action="/" method="GET">
+			<input type="submit" value="Volver" id="search-button"/>
+		</form>	
 	</body>
 </html>

@@ -1,8 +1,9 @@
 <html>
 	<body>
-		<h1>Tiempo</h1>
-		<form action="/weather" method="GET">
-			Elegir ciudad: <select name="id" >
+		<h1>Mulesoft weather application</h1>
+		<form action="/cities" method="GET">
+			Ingresar ciudad: <input name="query" />
+			Elegir pais: <select name="country" >
 				#[message.payload]
 			</select>
 			<input type="submit" value="Buscar" id="search-button"/>

@@ -2,7 +2,7 @@
     "inputMessageMetadata": {
         "messagePayload": {
             "connectorName": "#_custom_mule_metadata_type_#",
-            "typeId": "countries"
+            "typeId": "cities"
         }
     },
     "outputMessageMetadata": {
@@ -11,6 +11,6 @@
             "typeId": "FormHTML"
         }
     },
-    "id": "4e7c7148-2d08-47cd-a313-bee3ae245bc1",
+    "id": "4c2b7aa7-e485-4e73-ad76-beeaeab23934",
     "version": "5.2.0.0"
 }

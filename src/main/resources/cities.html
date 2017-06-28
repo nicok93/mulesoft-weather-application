@@ -1,0 +1,15 @@
+<html>
+	<body>
+		<h1>Mulesoft weather application</h1>
+		
+		<form action="/weather" method="GET">
+			Elegir ciudad: <select name="id" >
+					#[message.payload]
+				</select>
+			<input type="submit" value="Tiempo actual" id="search-button"/>
+		</form>
+		<form action="/" method="GET">
+			<input type="submit" value="Volver" id="search-button"/>
+		</form>	
+	</body>
+</html>
