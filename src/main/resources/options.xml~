@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <div>
+	<table>
   <option value="LabelName1">Label1</option>
   <option value="LabelName2">Label2</option>
+	
 </div>

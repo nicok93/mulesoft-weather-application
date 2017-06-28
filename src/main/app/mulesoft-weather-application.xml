@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ajax="http://www.mulesoft.org/schema/mule/ajax" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:ajax="http://www.mulesoft.org/schema/mule/ajax" xmlns:ws="http://www.mulesoft.org/schema/mule/ws"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
@@ -11,19 +16,25 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
 http://www.mulesoft.org/schema/mule/ajax http://www.mulesoft.org/schema/mule/ajax/current/mule-ajax.xsd
-http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
-    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <db:generic-config driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" doc:name="MySQL Configuration" url="jdbc:mysql://localhost:3306/weather?user=root&amp;password=root"/>
-    <http:request-config name="Query-openweathermap-configuration" host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
-    <jms:activemq-connector name="Active_MQ" brokerURL="tcp://localhost:61616" validateConnections="true" doc:name="Active MQ"/>
-    <flow name="searchCityFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP" allowedMethods="GET"/>
-        <db:select config-ref="MySQL_Configuration" doc:name="Database">
-            <db:parameterized-query><![CDATA[SELECT country_code, country_name FROM weather.cities city left join countries country on city.country=country.country_code where country_code is not null group by city.country order by country_code ASC;]]></db:parameterized-query>
-        </db:select>
-        <dw:transform-message doc:name="Transform Message" metadata:id="4d705c56-f55a-4b62-bc6c-0c49919b0cc5">
-            <dw:input-payload mimeType="application/java"/>
-            <dw:set-payload><![CDATA[%dw 1.0
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_Configuration"
+		host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+	<db:generic-config driverClassName="com.mysql.jdbc.Driver"
+		name="MySQL_Configuration" doc:name="MySQL Configuration"
+		url="jdbc:mysql://localhost:3306/weather?user=root&amp;password=root" />
+	<http:request-config name="Query-openweathermap-configuration"
+		host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
+	<flow name="searchCityFlow">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/" doc:name="HTTP" allowedMethods="GET" />
+		<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[SELECT country_code, country_name FROM weather.cities city left join countries country on city.country=country.country_code where country_code is not null group by city.country order by country_code ASC;]]></db:parameterized-query>
+		</db:select>
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="4d705c56-f55a-4b62-bc6c-0c49919b0cc5">
+			<dw:input-payload mimeType="application/java" />
+			<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
 {
@@ -33,12 +44,15 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 		}))
 	}
 }]]></dw:set-payload>
-        </dw:transform-message>
-        <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
-        <parse-template location="./src/main/resources/index.html" doc:name="Parse Template"/>
-    </flow>
-    <flow name="selectCityFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/cities" doc:name="HTTP"/>
+		</dw:transform-message>
+		<object-to-string-transformer mimeType="text/html"
+			doc:name="Object to String" />
+		<parse-template location="./src/main/resources/index.html"
+			doc:name="Parse Template" />
+	</flow>
+	<flow name="selectCityFlow">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/cities" doc:name="HTTP" />
         <db:select config-ref="MySQL_Configuration" doc:name="Database">
             <db:dynamic-query><![CDATA[select * from cities where country="#[message.inboundProperties.'http.query.params'.country]" && `name` like "%#[message.inboundProperties.'http.query.params'.query]%";]]></db:dynamic-query>
         </db:select>
@@ -55,20 +69,74 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 	}
 }]]></dw:set-payload>
         </dw:transform-message>
-        <object-to-string-transformer doc:name="Object to String" mimeType="text/html"/>
+        <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
         <parse-template location="./src/main/resources/cities.html" doc:name="Parse Template"/>
-    </flow>
-    <flow name="searchWeatherFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/weather" doc:name="HTTP" allowedMethods="GET"/>
-        <http:request config-ref="Query-openweathermap-configuration" path="/data/2.5/weather" method="GET" doc:name="HTTP">
-            <http:request-builder>
-                <http:query-param paramName="id" value="#[message.inboundProperties.'http.query.params'.id]"/>
-                <http:query-param paramName="appid" value="eba8d3b0edcaf9a93f9bd74589870d37"/>
-                <http:query-param paramName="units" value="metric"/>
-                <http:query-param paramName="lang" value="ES"/>
-            </http:request-builder>
-        </http:request>
-        <json:json-to-object-transformer returnClass="java.util.HashMap" mimeType="text/html" doc:name="JSON to Object"/>
-        <parse-template location="./src/main/resources/weather.html" doc:name="Parse Template"/>
-    </flow>
+	</flow>
+	<flow name="searchWeatherFlow">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/weather" doc:name="HTTP" allowedMethods="GET" />
+		<http:request config-ref="Query-openweathermap-configuration"
+			path="/data/2.5/weather" method="GET" doc:name="HTTP">
+			<http:request-builder>
+				<http:query-param paramName="id"
+					value="#[message.inboundProperties.'http.query.params'.id]" />
+				<http:query-param paramName="appid"
+					value="eba8d3b0edcaf9a93f9bd74589870d37" />
+				<http:query-param paramName="units" value="metric" />
+				<http:query-param paramName="lang" value="ES" />
+			</http:request-builder>
+		</http:request>
+		<json:json-to-object-transformer
+			returnClass="java.util.HashMap" mimeType="text/html" doc:name="JSON to Object" />
+		<parse-template location="./src/main/resources/weather.html"
+			doc:name="Parse Template" />
+	</flow>
+    <sub-flow name="assignCityName">
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <set-variable variableName="city" value="#[message.payload['city'].name]" doc:name="Variable"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </sub-flow>
+	<flow name="mulesoft-weather-applicationFlow">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/forecast" allowedMethods="GET" doc:name="HTTP" />
+		<set-variable variableName="id"
+			value="#[message.inboundProperties.'http.query.params'.id]" doc:name="Variable" />
+		<http:request config-ref="Query-openweathermap-configuration"
+			path="/data/2.5/forecast" method="GET" doc:name="HTTP">
+			<http:request-builder>
+				<http:query-param paramName="id"
+					value="#[message.inboundProperties.'http.query.params'.id]" />
+				<http:query-param paramName="appid"
+					value="eba8d3b0edcaf9a93f9bd74589870d37" />
+				<http:query-param paramName="units" value="metric" />
+				<http:query-param paramName="lang" value="ES" />
+			</http:request-builder>
+		</http:request>
+		<flow-ref name="assignCityName" doc:name="assignCityName" />
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="a8f33a36-dfea-44a4-8ca2-c4245f99d32f">
+			<dw:input-payload mimeType="application/json" />
+			<dw:input-variable mimeType="application/java"
+				variableName="id" />
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	div: {
+		(payload.list map ((info , indexOfList) -> {
+			tr @(style: "text-align:center;"): {
+				td: info.dt as :datetime as :string{format:"dd/MM/yyyy HH:mm"},
+				td: info.main.temp ++ "°",
+				td: info.main.humidity ++ "%",
+				td: info.main.pressure ++ "hpa"
+			}
+		}))
+	}
+}]]></dw:set-payload>
+		</dw:transform-message>
+		<object-to-string-transformer mimeType="text/html"
+			doc:name="Object to String" />
+		<parse-template location="./src/main/resources/forecast.html"
+			doc:name="Parse Template" />
+	</flow>
 </mule>

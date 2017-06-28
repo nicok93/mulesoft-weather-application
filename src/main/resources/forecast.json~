@@ -1,0 +1,42 @@
+{
+  "cod": "200",
+  "message": 0.0128,
+  "cnt": 40,
+  "list": [
+    {
+      "dt": 1498662000,
+      "main": {
+        "temp": 12.53,
+        "temp_min": 12.31,
+        "temp_max": 12.53,
+        "pressure": 1034.38,
+        "sea_level": 1035.86,
+        "grnd_level": 1034.38,
+        "humidity": 100,
+        "temp_kf": 0.22
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "lluvia ligera",
+          "icon": "10d"
+        }
+      ],
+      "clouds": {
+        "all": 56
+      },
+      "wind": {
+        "speed": 1.66,
+        "deg": 195.004
+      },
+      "rain": {
+        "3h": 0.0125
+      },
+      "sys": {
+        "pod": "d"
+      },
+      "dt_txt": "2017-06-28 15:00:00"
+    }
+]
+}

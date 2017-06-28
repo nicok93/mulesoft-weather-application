@@ -1,0 +1,22 @@
+<html>
+	<body>
+		<h1>Mulesoft weather application</h1>
+		<h2>Pronostico</h2>
+		<table border="1">
+			<tr>
+				<th>Fecha</th>
+				<th>Temperatura</th>
+				<th>Humedad</th>
+				<th>Presion</th>
+			</tr>
+			#[message.payload]
+		</table>
+		<form action="/weather" method="GET">
+			<input type="hidden" value="#[id]" name="id"/>
+			<input type="submit" value="Ver el tiempo actual en #[city]" id="weather-button"/>
+		</form>	
+		<form action="/" method="GET">
+			<input type="submit" value="Inicio" id="search-button"/>
+		</form>	
+	</body>
+</html>
