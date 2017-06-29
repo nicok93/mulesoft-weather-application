@@ -49,16 +49,37 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			doc:name="Object to String" />
 		<parse-template location="./src/main/resources/index.html"
 			doc:name="Parse Template" />
+        <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
+    <choice-exception-strategy name="mulesoft-weather-applicationChoice_Exception_Strategy">
+        <catch-exception-strategy when="#[exception.causedBy(org.mule.module.db.internal.domain.connection.ConnectionCreationException)]" doc:name="Catch Exception Strategy">
+            <parse-template location="./src/main/resources/no-sql-connection.html" doc:name="Parse Template"/>
+        </catch-exception-strategy>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <logger level="ERROR" doc:name="Logger"/>
+        </catch-exception-strategy>
+    </choice-exception-strategy>
 	<flow name="selectCityFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/cities" doc:name="HTTP" />
-        <db:select config-ref="MySQL_Configuration" doc:name="Database">
-            <db:dynamic-query><![CDATA[select * from cities where country="#[message.inboundProperties.'http.query.params'.country]" && `name` like "%#[message.inboundProperties.'http.query.params'.query]%";]]></db:dynamic-query>
-        </db:select>
-        <dw:transform-message doc:name="Transform Message" metadata:id="4c2b7aa7-e485-4e73-ad76-beeaeab23934">
-            <dw:input-payload mimeType="application/java"/>
-            <dw:set-payload><![CDATA[%dw 1.0
+        <choice doc:name="Choice">
+            <when expression="#[message.inboundProperties['http.query.params'].query.length() &lt;3]">
+                <parse-template location="./src/main/resources/error.html" doc:name="Parse Template"/>
+            </when>
+            <otherwise>
+                <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                    <db:dynamic-query><![CDATA[select * from cities where country="#[message.inboundProperties.'http.query.params'.country]" && `name` like "%#[message.inboundProperties.'http.query.params'.query]%";]]></db:dynamic-query>
+                </db:select>
+            </otherwise>
+        </choice>
+        <choice doc:name="Choice">
+            <when expression="#[payload.size()==0]">
+                <parse-template location="./src/main/resources/no-results.html" doc:name="Parse Template"/>
+            </when>
+            <otherwise>
+                <dw:transform-message doc:name="Transform Message" metadata:id="4c2b7aa7-e485-4e73-ad76-beeaeab23934">
+                    <dw:input-payload mimeType="application/java"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
 {
@@ -68,9 +89,12 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		}))
 	}
 }]]></dw:set-payload>
-        </dw:transform-message>
-        <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
-        <parse-template location="./src/main/resources/cities.html" doc:name="Parse Template"/>
+                </dw:transform-message>
+                <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
+                <parse-template location="./src/main/resources/cities.html" doc:name="Parse Template"/>
+            </otherwise>
+        </choice>
+        <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
 	<flow name="searchWeatherFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration"
