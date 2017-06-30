@@ -163,7 +163,9 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 				td: info.dt as :datetime as :string{format:"dd/MM/yyyy HH:mm"},
 				td: info.main.temp ++ "°",
 				td: info.main.humidity ++ "%",
-				td: info.main.pressure ++ "hpa"
+				td: info.main.pressure ++ "hpa",
+				td: info.wind.speed ++ "km/h - " ++ info.wind.deg ++ "°",
+				td: info.clouds.all ++ "%"
 			}
 		}))
 	}
