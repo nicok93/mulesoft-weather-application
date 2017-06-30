@@ -21,10 +21,10 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/twitter/current/mule-twitter.xsd
 http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
 	<http:listener-config name="HTTP_Listener_Configuration"
-		host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+		host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration" />
 	<db:generic-config driverClassName="com.mysql.jdbc.Driver"
 		name="MySQL_Configuration" doc:name="MySQL Configuration"
-		url="jdbc:mysql://104.198.36.151:3306/weather?user=root&amp;password=root" />
+		url="jdbc:mysql://${sql.host}:3306/weather?user=root&amp;password=root" />
 	<http:request-config name="Query-openweathermap-configuration"
 		host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
     <twitter:config name="Twitter__Configuration" accessKey="880561674662674437-uzxmND1XDLwSGD6KGbDRpYsAr3ZpXiV" accessSecret="AZBssya9V1nexpfLACv4W5AxObi6IDxeOyY8dIqxjZhs6" consumerKey="MSyx5BxDftcormeAI5aJcJpE4" consumerSecret="cSzfH9iNMc6ZTyLdCLwt52mdj55wR9bbsRKkmV8iJugO4naB94"  doc:name="Twitter: Configuration">
