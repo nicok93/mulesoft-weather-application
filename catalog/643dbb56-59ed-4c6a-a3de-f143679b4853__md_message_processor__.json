@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "current"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "twitter"
+        }
+    },
+    "id": "643dbb56-59ed-4c6a-a3de-f143679b4853",
+    "version": "5.2.0.0"
+}

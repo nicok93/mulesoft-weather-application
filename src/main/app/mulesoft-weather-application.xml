@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+<mule xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
 	xmlns:ajax="http://www.mulesoft.org/schema/mule/ajax" xmlns:ws="http://www.mulesoft.org/schema/mule/ws"
 	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
 	xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db"
@@ -17,7 +17,9 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
 http://www.mulesoft.org/schema/mule/ajax http://www.mulesoft.org/schema/mule/ajax/current/mule-ajax.xsd
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/twitter/current/mule-twitter.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
 	<http:listener-config name="HTTP_Listener_Configuration"
 		host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
 	<db:generic-config driverClassName="com.mysql.jdbc.Driver"
@@ -25,6 +27,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		url="jdbc:mysql://localhost:3306/weather?user=root&amp;password=root" />
 	<http:request-config name="Query-openweathermap-configuration"
 		host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
+    <twitter:config name="Twitter__Configuration" accessKey="880561674662674437-uzxmND1XDLwSGD6KGbDRpYsAr3ZpXiV" accessSecret="AZBssya9V1nexpfLACv4W5AxObi6IDxeOyY8dIqxjZhs6" consumerKey="MSyx5BxDftcormeAI5aJcJpE4" consumerSecret="cSzfH9iNMc6ZTyLdCLwt52mdj55wR9bbsRKkmV8iJugO4naB94"  doc:name="Twitter: Configuration">
+        <reconnect frequency="30000"/>
+    </twitter:config>
 	<flow name="searchCityFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/" doc:name="HTTP" allowedMethods="GET" />
@@ -47,13 +52,13 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</dw:transform-message>
 		<object-to-string-transformer mimeType="text/html"
 			doc:name="Object to String" />
-		<parse-template location="./src/main/resources/index.html"
+		<parse-template location="src/main/resources/index.html"
 			doc:name="Parse Template" />
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
     <choice-exception-strategy name="mulesoft-weather-applicationChoice_Exception_Strategy">
         <catch-exception-strategy when="#[exception.causedBy(org.mule.module.db.internal.domain.connection.ConnectionCreationException)]" doc:name="Catch Exception Strategy">
-            <parse-template location="./src/main/resources/no-sql-connection.html" doc:name="Parse Template"/>
+            <parse-template location="src/main/resources/no-sql-connection.html" doc:name="Parse Template"/>
         </catch-exception-strategy>
         <catch-exception-strategy doc:name="Catch Exception Strategy">
             <logger level="ERROR" doc:name="Logger"/>
@@ -64,7 +69,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			path="/cities" doc:name="HTTP" />
         <choice doc:name="Choice">
             <when expression="#[message.inboundProperties['http.query.params'].query.length() &lt;3]">
-                <parse-template location="./src/main/resources/error.html" doc:name="Parse Template"/>
+                <parse-template location="src/main/resources/error.html" doc:name="Parse Template"/>
             </when>
             <otherwise>
                 <db:select config-ref="MySQL_Configuration" doc:name="Database">
@@ -74,7 +79,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
         </choice>
         <choice doc:name="Choice">
             <when expression="#[payload.size()==0]">
-                <parse-template location="./src/main/resources/no-results.html" doc:name="Parse Template"/>
+                <parse-template location="src/main/resources/no-results.html" doc:name="Parse Template"/>
             </when>
             <otherwise>
                 <dw:transform-message doc:name="Transform Message" metadata:id="4c2b7aa7-e485-4e73-ad76-beeaeab23934">
@@ -91,7 +96,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 }]]></dw:set-payload>
                 </dw:transform-message>
                 <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
-                <parse-template location="./src/main/resources/cities.html" doc:name="Parse Template"/>
+                <parse-template location="src/main/resources/cities.html" doc:name="Parse Template"/>
             </otherwise>
         </choice>
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
@@ -112,7 +117,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</http:request>
 		<json:json-to-object-transformer
 			returnClass="java.util.HashMap" mimeType="text/html" doc:name="JSON to Object" />
-		<parse-template location="./src/main/resources/weather.html"
+		<parse-template location="src/main/resources/weather.html"
 			doc:name="Parse Template" />
 	</flow>
     <sub-flow name="assignCityName">
@@ -160,7 +165,28 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</dw:transform-message>
 		<object-to-string-transformer mimeType="text/html"
 			doc:name="Object to String" />
-		<parse-template location="./src/main/resources/forecast.html"
+		<parse-template location="src/main/resources/forecast.html"
 			doc:name="Parse Template" />
+        <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
+    <flow name="twitterFlow">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="0 0/1 * 1/1 * ? *" timeZone="65"/>
+            <http:request config-ref="Query-openweathermap-configuration"
+			path="/data/2.5/weather" method="GET" doc:name="HTTP">
+				<http:request-builder>
+					<http:query-param paramName="id"
+						value="3433955" />
+					<http:query-param paramName="appid"
+						value="eba8d3b0edcaf9a93f9bd74589870d37" />
+					<http:query-param paramName="units" value="metric" />
+					<http:query-param paramName="lang" value="ES" />
+				</http:request-builder>
+			</http:request>
+        </poll>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <twitter:update-status config-ref="Twitter__Configuration" status="#[server.dateTime.format('HH:mm')] | #[message.payload.weather[0].description] | Temperatura actual: #[message.payload.main.temp]&#176; - Humedad: #[message.payload.main.humidity]% - Presion: #[message.payload.main.pressure]hpa - Viento: #[message.payload.wind.speed] km/h de #[message.payload.wind.deg]&#176; - Nubosidad: #[message.payload.clouds.all]%" doc:name="Twitter"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <exception-strategy ref="" doc:name="Reference Exception Strategy"/>
+    </flow>
 </mule>
