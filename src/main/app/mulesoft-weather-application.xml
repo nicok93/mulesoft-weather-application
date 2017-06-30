@@ -21,10 +21,10 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/twitter/current/mule-twitter.xsd
 http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
 	<http:listener-config name="HTTP_Listener_Configuration"
-		host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+		host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration" />
 	<db:generic-config driverClassName="com.mysql.jdbc.Driver"
 		name="MySQL_Configuration" doc:name="MySQL Configuration"
-		url="jdbc:mysql://104.198.36.151:3306/weather?user=root&amp;password=root" />
+		url="jdbc:mysql://${sql.host}:3306/weather?user=root&amp;password=root" />
 	<http:request-config name="Query-openweathermap-configuration"
 		host="api.openweathermap.org" port="80" doc:name="HTTP Request Configuration" />
     <twitter:config name="Twitter__Configuration" accessKey="880561674662674437-uzxmND1XDLwSGD6KGbDRpYsAr3ZpXiV" accessSecret="AZBssya9V1nexpfLACv4W5AxObi6IDxeOyY8dIqxjZhs6" consumerKey="MSyx5BxDftcormeAI5aJcJpE4" consumerSecret="cSzfH9iNMc6ZTyLdCLwt52mdj55wR9bbsRKkmV8iJugO4naB94"  doc:name="Twitter: Configuration">
@@ -33,10 +33,10 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 	<flow name="searchCityFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/" doc:name="HTTP" allowedMethods="GET" />
-		<db:select config-ref="MySQL_Configuration" doc:name="Database">
+		<db:select config-ref="MySQL_Configuration" doc:name="Database Query Countries">
 			<db:parameterized-query><![CDATA[SELECT country_code, country_name FROM weather.cities city left join countries country on city.country=country.country_code where country_code is not null group by city.country order by country_code ASC;]]></db:parameterized-query>
 		</db:select>
-		<dw:transform-message doc:name="Transform Message"
+		<dw:transform-message doc:name="Transform country options"
 			metadata:id="4d705c56-f55a-4b62-bc6c-0c49919b0cc5">
 			<dw:input-payload mimeType="application/java" />
 			<dw:set-payload><![CDATA[%dw 1.0
@@ -51,14 +51,15 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 }]]></dw:set-payload>
 		</dw:transform-message>
 		<object-to-string-transformer mimeType="text/html"
-			doc:name="Object to String" />
+			doc:name="Object to String (HTML)" />
+        <logger level="INFO" doc:name="Logger"/>
 		<parse-template location="templates/index.html"
-			doc:name="Parse Template" />
+			doc:name="Parse Template Index" />
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
     <choice-exception-strategy name="mulesoft-weather-applicationChoice_Exception_Strategy">
         <catch-exception-strategy when="#[exception.causedBy(org.mule.module.db.internal.domain.connection.ConnectionCreationException)]" doc:name="Catch Exception Strategy">
-            <parse-template location="templates/no-sql-connection.html" doc:name="Parse Template"/>
+            <parse-template location="templates/no-sql-connection.html" doc:name="Parse Template No-sql-connection"/>
         </catch-exception-strategy>
         <catch-exception-strategy doc:name="Catch Exception Strategy">
             <logger level="ERROR" doc:name="Logger"/>
@@ -69,20 +70,23 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 			path="/cities" doc:name="HTTP" />
         <choice doc:name="Choice">
             <when expression="#[message.inboundProperties['http.query.params'].query.length() &lt;3]">
-                <parse-template location="templates/error.html" doc:name="Parse Template"/>
+                <logger level="INFO" doc:name="Logger"/>
+                <parse-template location="templates/error.html" doc:name="Parse Template Error"/>
             </when>
             <otherwise>
-                <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                <db:select config-ref="MySQL_Configuration" doc:name="Database Query city-country">
                     <db:dynamic-query><![CDATA[select * from cities where country="#[message.inboundProperties.'http.query.params'.country]" && `name` like "%#[message.inboundProperties.'http.query.params'.query]%";]]></db:dynamic-query>
                 </db:select>
+                <logger level="INFO" doc:name="Logger"/>
             </otherwise>
         </choice>
         <choice doc:name="Choice">
             <when expression="#[payload.size()==0]">
-                <parse-template location="templates/no-results.html" doc:name="Parse Template"/>
+                <logger level="INFO" doc:name="Logger"/>
+                <parse-template location="templates/no-results.html" doc:name="Parse Template No results"/>
             </when>
             <otherwise>
-                <dw:transform-message doc:name="Transform Message" metadata:id="4c2b7aa7-e485-4e73-ad76-beeaeab23934">
+                <dw:transform-message doc:name="Transform Message City options" metadata:id="4c2b7aa7-e485-4e73-ad76-beeaeab23934">
                     <dw:input-payload mimeType="application/java"/>
                     <dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
@@ -95,8 +99,9 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 	}
 }]]></dw:set-payload>
                 </dw:transform-message>
-                <object-to-string-transformer mimeType="text/html" doc:name="Object to String"/>
-                <parse-template location="templates/cities.html" doc:name="Parse Template"/>
+                <object-to-string-transformer mimeType="text/html" doc:name="Object to String HTML"/>
+                <logger level="INFO" doc:name="Logger"/>
+                <parse-template location="templates/cities.html" doc:name="Parse Template Cities"/>
             </otherwise>
         </choice>
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
@@ -105,7 +110,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/weather" doc:name="HTTP" allowedMethods="GET" />
 		<http:request config-ref="Query-openweathermap-configuration"
-			path="/data/2.5/weather" method="GET" doc:name="HTTP">
+			path="/data/2.5/weather" method="GET" doc:name="HTTP search weather">
 			<http:request-builder>
 				<http:query-param paramName="id"
 					value="#[message.inboundProperties.'http.query.params'.id]" />
@@ -117,15 +122,16 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 		</http:request>
 		<json:json-to-object-transformer
 			returnClass="java.util.HashMap" mimeType="text/html" doc:name="JSON to Object" />
+        <logger level="INFO" doc:name="Logger"/>
 		<parse-template location="templates/weather.html"
-			doc:name="Parse Template" />
+			doc:name="Parse Template Weather" />
 	</flow>
     <sub-flow name="assignCityName">
         <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
         <set-variable variableName="city" value="#[message.payload['city'].name]" doc:name="Variable"/>
         <json:object-to-json-transformer doc:name="Object to JSON"/>
     </sub-flow>
-	<flow name="mulesoft-weather-applicationFlow">
+	<flow name="forecastFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/forecast" allowedMethods="GET" doc:name="HTTP" />
 		<set-variable variableName="id"
@@ -142,7 +148,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 			</http:request-builder>
 		</http:request>
 		<flow-ref name="assignCityName" doc:name="assignCityName" />
-		<dw:transform-message doc:name="Transform Message"
+		<dw:transform-message doc:name="Transform Message To HTML Table"
 			metadata:id="a8f33a36-dfea-44a4-8ca2-c4245f99d32f">
 			<dw:input-payload mimeType="application/json" />
 			<dw:input-variable mimeType="application/java"
@@ -165,8 +171,9 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 		</dw:transform-message>
 		<object-to-string-transformer mimeType="text/html"
 			doc:name="Object to String" />
+        <logger level="INFO" doc:name="Logger"/>
 		<parse-template location="templates/forecast.html"
-			doc:name="Parse Template" />
+			doc:name="Parse Template Forecast" />
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
 	</flow>
     <flow name="twitterFlow">
