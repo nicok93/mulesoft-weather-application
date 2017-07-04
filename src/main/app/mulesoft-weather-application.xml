@@ -180,7 +180,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 	</flow>
     <flow name="twitterFlow">
         <poll doc:name="Poll">
-            <schedulers:cron-scheduler expression="0 0/30 * 1/1 * ? *" timeZone="65"/>
+            <schedulers:cron-scheduler expression="0 0 0/1 1/1 * ? *" timeZone="65"/>
             <http:request config-ref="Query-openweathermap-configuration"
 			path="/data/2.5/weather" method="GET" doc:name="HTTP">
 				<http:request-builder>
@@ -194,7 +194,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 			</http:request>
         </poll>
         <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
-        <twitter:update-status config-ref="Twitter__Configuration" status="#[server.dateTime.format('HH:mm')] | #[message.payload.weather[0].description] | Temperatura actual: #[message.payload.main.temp]&#176; - Humedad: #[message.payload.main.humidity]% - Presion: #[message.payload.main.pressure]hpa - Viento: #[message.payload.wind.speed] km/h de #[message.payload.wind.deg]&#176; - Nubosidad: #[message.payload.clouds.all]%" doc:name="Twitter"/>
+        <twitter:update-status config-ref="Twitter__Configuration" status="#[server.dateTime.withTimeZone('America/Argentina/Buenos_Aires').format('HH:mm')] | #[message.payload.weather[0].description] | Temperatura actual: #[message.payload.main.temp]&#176; - Humedad: #[message.payload.main.humidity]% - Presion: #[message.payload.main.pressure]hpa - Viento: #[message.payload.wind.speed] km/h de #[message.payload.wind.deg]&#176; - Nubosidad: #[message.payload.clouds.all]%" doc:name="Twitter"/>
         <logger level="INFO" doc:name="Logger"/>
         <exception-strategy ref="mulesoft-weather-applicationChoice_Exception_Strategy" doc:name="Reference Exception Strategy"/>
     </flow>
